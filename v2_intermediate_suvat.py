@@ -45,11 +45,20 @@ for t in times:
     x = (u*t*np.cos(theta))
     x_displacements.append(float(x))
 
+#update to add quadratic best fit line
+coefficients = np.polyfit(x_displacements, y_displacements, 2)
+fit_fn = np.poly1d(coefficients)
+
+x_smooth = np.linspace(min(x_displacements), max(x_displacements), 1000)
+y_smooth = fit_fn(x_smooth)
+
 fig,ax = plt.subplots()
 
 ax.scatter(x_displacements, y_displacements, marker=',',s=1)
-ax.set_xlabel("X-displacement")
-ax.set_ylabel("Y-displacement")
+ax.plot(x_smooth, y_smooth, 'r-', label="Quadratic Fit")
+ax.set_xlabel("X-displacement (m)")
+ax.set_ylabel("Y-displacement (m)")
+ax.set_title("Projectile Motion with a quadratic fit")
 plt.show()
 
 
