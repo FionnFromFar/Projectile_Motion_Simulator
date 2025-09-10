@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 #establishing lists with initial conditions for values of x, y and t
 x_displacements = [0]
@@ -9,7 +10,15 @@ y_displacements = [0]
 #initial conditions
 initial_y_disp = 0
 initial_x_disp = 0
-u = float(input("Enter the initial velocity "))
+while True: #loop to make sure angle is within range
+    u = float(input("Enter the initial velocity (1-100)m/s: "))
+    if u < 1:
+        print("Initial velocity too low, try again ")
+    elif u > 100:
+        print("Initial velocity too High, try again ")
+    else:
+        break
+
 while True: #loop to make sure angle is within range
     theta = float(input("Enter launch angle (0-90): "))
     if 0 <= theta <= 90:
@@ -19,7 +28,7 @@ while True: #loop to make sure angle is within range
 theta = float(np.radians(theta))
 g = 9.81
 #other necessary things (most copied from version 1)
-dt = 0.01
+dt = 0.1
 
 a = (-0.5*g)
 b = u*np.sin(theta)
@@ -52,13 +61,39 @@ fit_fn = np.poly1d(coefficients)
 x_smooth = np.linspace(min(x_displacements), max(x_displacements), 1000)
 y_smooth = fit_fn(x_smooth)
 
+u_max = 100
+R_max = (u_max**2)/g
+H_max = (u_max**2)/(2*g)
+
 fig,ax = plt.subplots()
 
-ax.scatter(x_displacements, y_displacements, marker=',',s=1)
-ax.plot(x_smooth, y_smooth, 'r-', label="Quadratic Fit")
+ax.set_xlim(0, R_max)
+ax.set_ylim(0, H_max)
+#ax.scatter(x_displacements, y_displacements, marker=',',s=1)
+#ax.plot(x_smooth, y_smooth, 'r-', label="Quadratic Fit")
 ax.set_xlabel("X-displacement (m)")
 ax.set_ylabel("Y-displacement (m)")
-ax.set_title("Projectile Motion with a quadratic fit")
+ax.set_title("Projectile Motion Animation")
+
+(projectile,) = ax.plot([], [], "bo", markersize=5) #The projectile
+(path,) = ax.plot([], [], "r-", linewidth = 1.5) #The path-line drawn behind the projectile 
+
+# functions for the animation
+def init():
+    projectile.set_data([], [])
+    path.set_data([], [])
+    return projectile, path
+
+def update(frame):
+    projectile.set_data([x_displacements[frame]], [y_displacements[frame]])
+    path.set_data(x_displacements[:frame], y_displacements[:frame])
+    return projectile, path
+
+
+ani = FuncAnimation(fig, update, frames=len(times),
+                    init_func=init, interval=10, blit=True, repeat=False)
+
+
 plt.show()
 
 
