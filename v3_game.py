@@ -23,7 +23,7 @@ scale = 50
 projectile_stats = []
 game_started = False
 
-#setting up the speed slider
+#setting up the speed slider:
 slider_track_x = 200
 slider_track_y = 600
 slider_width = 300
@@ -33,6 +33,17 @@ speed_min = 1
 speed_max = 15
 slider_x = int(slider_track_x + (speed - speed_min) / (speed_max - speed_min) * slider_width)
 dragging_speed = False
+
+#setting up the angle slider:
+slider_angle_x = 200
+slider_angle_y = 650
+slider_angle_width = 300
+slider_angle_height = 5
+angle_min = 0
+angle_max = 90
+slider_angle_xpos = int(slider_angle_x + (angle - angle_min) / (angle_max - angle_min) * slider_angle_width)
+dragging_angle = False
+
 
 #main game loop
 
@@ -82,17 +93,28 @@ while True:
         
         
             mx, my = event.pos
-            if (mx - slider_x)**2 + (my - slider_track_y)**2 <= knob_radius**2:
+            if (mx - slider_x)**2 + (my - slider_track_y)**2 <= knob_radius**2: #speed slider
                 dragging_speed = True
+            elif (mx - slider_angle_xpos)**2 + (my - slider_angle_y)**2 <= knob_radius**2: #angle slider
+                dragging_angle = True
+    
 
         elif event.type == pygame.MOUSEBUTTONUP:
             dragging_speed = False
+            dragging_angle = False
             
-        elif event.type == pygame.MOUSEMOTION and dragging_speed:
+        elif event.type == pygame.MOUSEMOTION:
             mx, my = event.pos
-            slider_x = max(slider_track_x, min(slider_track_x + slider_width, mx))
-            slider_percent = (slider_x - slider_track_x) / slider_width
-            speed = speed_min + slider_percent * (speed_max - speed_min)
+            #speed slider
+            if dragging_speed:
+                slider_x = max(slider_track_x, min(slider_track_x + slider_width, mx))
+                slider_percent = (slider_x - slider_track_x) / slider_width
+                speed = speed_min + slider_percent * (speed_max - speed_min)
+            #angle slider
+            if dragging_angle:
+                slider_angle_xpos = max(slider_angle_x, min(slider_angle_x + slider_angle_width, mx))
+                slider_angle_percent = (slider_angle_xpos - slider_angle_x) / slider_angle_width
+                angle = angle_min + slider_angle_percent * (angle_max - angle_min)
 
 
     #Physics section
@@ -128,14 +150,18 @@ while True:
         pygame.draw.rect(screen, (34, 139, 34), (0, int(0.65 * height), width, int(0.35*height))) #grass
         pygame.draw.rect(screen, (255, 0, 0), button_fire) #red button
         pygame.draw.rect(screen, (0, 100, 0), button_reload) #green reload button same size as 
-        pygame.draw.rect(screen, (200, 200, 200), (slider_track_x, slider_track_y - slider_height//2, slider_width, slider_height)) #slider track
-        pygame.draw.circle(screen, (255, 0, 0), (slider_x, slider_track_y), knob_radius) #slider knob
+        pygame.draw.rect(screen, (200, 200, 200), (slider_track_x, slider_track_y - slider_height//2, slider_width, slider_height)) #speed slider track
+        pygame.draw.rect(screen, (200, 200, 200), (slider_angle_x, slider_angle_y - slider_angle_height//2, slider_angle_width, slider_angle_height)) #angle slider track
+        pygame.draw.circle(screen, (255, 0, 0), (slider_x, slider_track_y), knob_radius) #speed slider knob
+        pygame.draw.circle(screen, (255, 0, 0), (slider_angle_xpos, slider_angle_y), knob_radius)
         text_fire = font.render("FIRE", True, (255, 165, 0))
         text_reload = font.render("RELOAD", True, (0, 128, 128))
         text_speed = font.render(f"Speed: {int(speed)}", True, (0, 0, 0))
+        text_angle = font.render(f"Angle: {int(angle)}", True, (0, 0, 0))
         screen.blit(text_fire, (button_fire.x + 30, button_fire.y + 10))
         screen.blit(text_reload, (button_reload.x + 7, button_reload.y + 10))
         screen.blit(text_speed, (slider_track_x, slider_track_y - 40))
+        screen.blit(text_angle, (slider_angle_x, slider_angle_y - 40))
         
 
         for proj in projectile_stats:
