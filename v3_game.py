@@ -1,7 +1,7 @@
-import numpy
 import pygame
 import math
 import sys
+import random
 
 #setting up the environment
 
@@ -15,12 +15,14 @@ font_big = pygame.font.SysFont(None, 50)
 button_fire = pygame.Rect(1050, 600, 115, 50)
 button_reload = pygame.Rect(1050, 520, 115, 50)
 button_start = pygame.Rect(width//2 - 100, height//2 - 40, 200, 80)
+button_score = pygame.Rect(150, 100, 115, 50)
 fired = False
 speed = 10
 g = 9.81
 angle = 45
 scale = 50
 projectile_stats = []
+score = 0
 game_started = False
 
 #setting up the speed slider:
@@ -43,6 +45,15 @@ angle_min = 0
 angle_max = 90
 slider_angle_xpos = int(slider_angle_x + (angle - angle_min) / (angle_max - angle_min) * slider_angle_width)
 dragging_angle = False
+
+#making the hole in a random place
+def hole_randomiser():
+    hole_width = 150
+    hole_height = 40
+    x = random.randint(300, width - hole_width - 50)
+    y = int(0.65 * height) + 20
+    return pygame.Rect(x, y, hole_width, hole_height)
+hole_rect = hole_randomiser()
 
 
 #main game loop
@@ -130,6 +141,22 @@ while True:
                 proj["active"] = False
                 fired = False
 
+                #checking landing position
+                start_x = 130
+                start_y = int(0.65 * height) + 40
+                px = int(start_x + (proj["x"]* scale))
+                py = int(start_y - (proj["y"] * scale))
+
+                if hole_rect.collidepoint(px, py):
+                    score += 1
+                    hole_rect = hole_randomiser()
+                    projectile_stats.remove(proj)
+                else:
+                    game_started = False
+                    score = 0
+                    projectile_stats.clear()
+
+
 
 
     #Drawing/animation section
@@ -148,20 +175,25 @@ while True:
     elif game_started:
         pygame.draw.rect(screen, (135, 206, 235), (0, 0, width, int(0.65*height))) #sky
         pygame.draw.rect(screen, (34, 139, 34), (0, int(0.65 * height), width, int(0.35*height))) #grass
-        pygame.draw.rect(screen, (255, 0, 0), button_fire) #red button
-        pygame.draw.rect(screen, (0, 100, 0), button_reload) #green reload button same size as 
+        pygame.draw.rect(screen, (255, 0, 0), button_fire) #red fire button
+        pygame.draw.rect(screen, (0, 100, 0), button_reload) #green reload button
+        pygame.draw.rect(screen, (17, 103, 177), button_score) # blue score button
         pygame.draw.rect(screen, (200, 200, 200), (slider_track_x, slider_track_y - slider_height//2, slider_width, slider_height)) #speed slider track
         pygame.draw.rect(screen, (200, 200, 200), (slider_angle_x, slider_angle_y - slider_angle_height//2, slider_angle_width, slider_angle_height)) #angle slider track
         pygame.draw.circle(screen, (255, 0, 0), (slider_x, slider_track_y), knob_radius) #speed slider knob
-        pygame.draw.circle(screen, (255, 0, 0), (slider_angle_xpos, slider_angle_y), knob_radius)
-        text_fire = font.render("FIRE", True, (255, 165, 0))
-        text_reload = font.render("RELOAD", True, (0, 128, 128))
-        text_speed = font.render(f"Speed: {int(speed)}", True, (0, 0, 0))
-        text_angle = font.render(f"Angle: {int(angle)}", True, (0, 0, 0))
+        pygame.draw.circle(screen, (255, 0, 0), (slider_angle_xpos, slider_angle_y), knob_radius) #angle slider knob
+        pygame.draw.ellipse(screen, (0, 0, 0), hole_rect) # black oval
+        text_fire = font.render("FIRE", True, (255, 165, 0)) #FIRE text
+        text_reload = font.render("RELOAD", True, (0, 128, 128)) #RELOAD text
+        text_score = font.render(f"Score: {int(score)}", True, (2, 52, 94)) #score text
+        text_speed = font.render(f"Speed: {int(speed)}", True, (0, 0, 0)) #speed text
+        text_angle = font.render(f"Angle: {int(angle)}", True, (0, 0, 0)) #angle text
+        
         screen.blit(text_fire, (button_fire.x + 30, button_fire.y + 10))
         screen.blit(text_reload, (button_reload.x + 7, button_reload.y + 10))
         screen.blit(text_speed, (slider_track_x, slider_track_y - 40))
         screen.blit(text_angle, (slider_angle_x, slider_angle_y - 40))
+        screen.blit(text_score, (button_score.x + 7, button_score.y + 8))
         
 
         for proj in projectile_stats:
